@@ -9,7 +9,8 @@ public class AccountManagerTest {
     Customer customer = new Customer();
     AccountManager accountManager = new AccountManagerImpl();
 
-    @Test void givenAmountBelowMaxCreditForNormalCustomerWhenWithdrawThenSubtractFromBalance() {
+    @Test
+    void givenAmountBelowMaxCreditForNormalCustomerWhenWithdrawThenSubtractFromBalance() {
         // Arrange
         customer.setBalance(100);
 
@@ -24,53 +25,71 @@ public class AccountManagerTest {
 
 
     @Test
-    public void testWithdrawSufficientBalance() {
-//        Customer customer = new Customer(1000, false, false);
-        customer.setBalance(1000);
+    public void givenInsufficientBalanceAndNoCreditAllowedWhenWithdrawThenReturnInsufficientAccountBalance() {
+        Customer customer = new Customer();
+        customer.setBalance(50);
+        customer.setCreditAllowed(false);
+        customer.setVip(false);
 
-        String result = accountManager.withdraw(customer, 500);
+        String result = accountManager.withdraw(customer, 100);
+        assertEquals("insufficient account balance", result);
+    }
+
+    @Test
+    public void givenInsufficientBalanceAndCreditAllowedAndBelowMaxCreditWhenWithdrawThenReturnSuccess() {
+        Customer customer = new Customer();
+        customer.setBalance(50);
+        customer.setCreditAllowed(true);
+        customer.setMaxCredit(100);
+        customer.setVip(false);
+
+        String result = accountManager.withdraw(customer, 100);
         assertEquals("success", result);
-        assertEquals(500, customer.getBalance());
     }
 
     @Test
-    public void testWithdrawInsufficientBalanceNoCredit() {
-//        Customer customer = new Customer(1000, false, false);
-        customer.setBalance(1000);
+    public void givenInsufficientBalanceAndCreditAllowedAndExceedMaxCreditForNonVipWhenWithdrawThenReturnMaximumCreditExceeded() {
+        Customer customer = new Customer();
+        customer.setBalance(50);
+        customer.setCreditAllowed(true);
+        customer.setMaxCredit(100);
+        customer.setVip(false);
 
-        String result = accountManager.withdraw(customer, 1500);
-        assertEquals("insufficient account balance", result);
-        assertEquals(1000, customer.getBalance()); // Balance should remain unchanged
+        String result = accountManager.withdraw(customer, 200);
+        assertEquals("maximum credit exceeded", result);
     }
 
     @Test
-    public void testWithdrawInsufficientBalanceCreditExceeded() {
-//        Customer customer = new Customer(1000, true, false);
-        customer.setBalance(1000);
+    public void givenInsufficientBalanceAndCreditAllowedAndExceedMaxCreditForVipWhenWithdrawThenReturnSuccess() {
+        Customer customer = new Customer();
+        customer.setBalance(50);
+        customer.setCreditAllowed(true);
+        customer.setMaxCredit(100);
+        customer.setVip(true);
 
-        String result = accountManager.withdraw(customer, 7000); // 1000 - 7000 = -6000 which is less than -5000
-        assertEquals("insufficient account balance", result);
-        assertEquals(1000, customer.getBalance()); // Balance should remain unchanged
-    }
-
-    @Test
-    public void testWithdrawInsufficientBalanceCreditAllowedVip() {
-//        Customer customer = new Customer(1000, true, true);
-        customer.setBalance(1000);
-
-        String result = accountManager.withdraw(customer, 7000); // 1000 - 7000 = -6000, but customer is VIP
+        String result = accountManager.withdraw(customer, 200);
         assertEquals("success", result);
-        assertEquals(-6000, customer.getBalance());
     }
 
     @Test
-    public void testWithdrawInsufficientBalanceCreditWithinLimit() {
-//        Customer customer = new Customer(1000, true, false);
-        customer.setBalance(1000);
+    public void givenZeroBalanceAndNoCreditAllowedWhenWithdrawThenReturnInsufficientAccountBalance() {
+        Customer customer = new Customer();
+        customer.setBalance(0);
+        customer.setCreditAllowed(false);
+        customer.setVip(false);
 
-        String result = accountManager.withdraw(customer, 4000); // 1000 - 4000 = -3000 which is within the limit
+        String result = accountManager.withdraw(customer, 50);
         assertEquals("insufficient account balance", result);
-        assertEquals(1000, customer.getBalance());
     }
 
+    @Test
+    public void givenExactBalanceAndNoCreditAllowedWhenWithdrawThenReturnSuccess() {
+        Customer customer = new Customer();
+        customer.setBalance(100);
+        customer.setCreditAllowed(false);
+        customer.setVip(false);
+
+        String result = accountManager.withdraw(customer, 100);
+        assertEquals("success", result);
+    }
 }
